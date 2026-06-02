@@ -1,15 +1,30 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
+
 import { chapters } from "@/lib/data";
 import { ResizableEmbed } from "@/components/resizable-embed";
-import { RiExternalLinkLine, RiAlertLine, RiEyeLine, RiEyeOffLine, RiArrowLeftLine } from "react-icons/ri";
 
-function ChapterCard({ chapter, index }: { chapter: typeof chapters[0]; index: number }) {
+import {
+  RiExternalLinkLine,
+  RiAlertLine,
+  RiEyeLine,
+  RiEyeOffLine,
+  RiArrowLeftLine,
+} from "react-icons/ri";
+
+function ChapterCard({
+  chapter,
+  index,
+}: {
+  chapter: typeof chapters[0];
+  index: number;
+}) {
   const [showEmbed, setShowEmbed] = useState(false);
+
   return (
     <motion.div
-  style={{ breakInside: "avoid" }}
+      style={{ breakInside: "avoid" }}
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
@@ -17,33 +32,56 @@ function ChapterCard({ chapter, index }: { chapter: typeof chapters[0]; index: n
       whileHover={{ scale: 1.01 }}
       className={`mb-5 group relative rounded-2xl p-[1px] overflow-visible bg-gradient-to-br ${chapter.color}`}
     >
-      <div className={`absolute inset-0 bg-gradient-to-br ${chapter.color} opacity-0 group-hover:opacity-25 blur-2xl transition-opacity duration-700 pointer-events-none rounded-2xl`} />
+      <div
+        className={`absolute inset-0 bg-gradient-to-br ${chapter.color} opacity-0 group-hover:opacity-25 blur-2xl transition-opacity duration-700 pointer-events-none rounded-2xl`}
+      />
+
       <div className="relative bg-[#08080D] rounded-[15px] flex flex-col border border-white/5 group-hover:border-white/10 transition-colors duration-300 overflow-visible">
         <div className="absolute inset-2 rounded-xl border border-white/0 group-hover:border-white/[0.07] transition-all duration-500 pointer-events-none" />
 
         <div className="relative p-5 pb-3">
           <div className="flex justify-between items-start mb-3">
-            <span className={`text-4xl font-serif italic text-transparent bg-clip-text bg-gradient-to-br ${chapter.color} opacity-50`}>
+            <span
+              className={`text-4xl font-serif italic text-transparent bg-clip-text bg-gradient-to-br ${chapter.color} opacity-50`}
+            >
               {chapter.id.toString().padStart(2, "0")}
             </span>
           </div>
-          <h3 className="text-sm font-semibold text-white tracking-wide mb-2">{chapter.title}</h3>
-          <p className="text-xs text-white/45 leading-relaxed">{chapter.description}</p>
+
+          <h3 className="text-sm font-semibold text-white tracking-wide mb-2">
+            {chapter.title}
+          </h3>
+
+          <p className="text-xs text-white/45 leading-relaxed">
+            {chapter.description}
+          </p>
         </div>
 
         <div className="px-5 pb-4 flex flex-wrap gap-2">
-          <a href={`https://cori${chapter.id}.netlify.app`} target="_blank" rel="noopener noreferrer"
+          <a
+            href={`https://cori${chapter.id}.netlify.app`}
+            target="_blank"
+            rel="noopener noreferrer"
             className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium uppercase tracking-wider bg-gradient-to-br ${chapter.color} text-white opacity-85 hover:opacity-100 transition-opacity`}
-            onClick={e => e.stopPropagation()}>
-            <RiExternalLinkLine className="shrink-0" /> View Site
+            onClick={(e) => e.stopPropagation()}
+          >
+            <RiExternalLinkLine className="shrink-0" />
+            View Site
           </a>
-          <a href={`https://${chapter.id}corinda.netlify.app`} target="_blank" rel="noopener noreferrer"
+
+          <a
+            href={`https://${chapter.id}corinda.netlify.app`}
+            target="_blank"
+            rel="noopener noreferrer"
             className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium uppercase tracking-wider bg-white/5 border border-white/10 text-white/55 hover:text-white hover:bg-white/10 transition-all"
-            onClick={e => e.stopPropagation()}>
-            <RiAlertLine className="shrink-0 text-green-400" /> Emergency
+            onClick={(e) => e.stopPropagation()}
+          >
+            <RiAlertLine className="shrink-0 text-green-400" />
+            Emergency
           </a>
+
           <button
-            onClick={() => setShowEmbed(v => !v)}
+            onClick={() => setShowEmbed((v) => !v)}
             className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium uppercase tracking-wider bg-white/5 border border-white/10 text-white/40 hover:text-white/70 transition-all ml-auto"
           >
             {showEmbed ? <RiEyeOffLine /> : <RiEyeLine />}
@@ -54,14 +92,16 @@ function ChapterCard({ chapter, index }: { chapter: typeof chapters[0]; index: n
         <AnimatePresence>
           {showEmbed && (
             <motion.div
-  style={{ breakInside: "avoid" }}
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="overflow-hidden border-t border-white/8 rounded-b-[15px]"
+              transition={{
+                duration: 0.3,
+                ease: "easeInOut",
+              }}
+              className="overflow-visible border-t border-white/8 rounded-b-[15px]"
             >
-              <div className="p-[1px] rounded-b-[15px] overflow-hidden">
+              <div className="p-[1px] rounded-b-[15px] overflow-visible">
                 <ResizableEmbed
                   src={`https://cori${chapter.id}.netlify.app`}
                   title={`Chapter ${chapter.id}: ${chapter.title}`}
@@ -83,32 +123,44 @@ export default function Mentalism() {
       <div className="max-w-7xl mx-auto px-4 pt-16 pb-6">
         <Link href="/">
           <span className="inline-flex items-center gap-2 text-xs text-white/30 hover:text-white/60 transition-colors uppercase tracking-widest cursor-pointer">
-            <RiArrowLeftLine /> Back to Overview
+            <RiArrowLeftLine />
+            Back to Overview
           </span>
         </Link>
       </div>
 
       <section className="max-w-7xl mx-auto px-4 pb-24">
         <motion.div
-  style={{ breakInside: "avoid" }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
           className="text-center mb-14"
         >
-          <p className="text-[10px] uppercase tracking-[0.5em] text-purple-400/50 mb-4">Tony Corinda</p>
+          <p className="text-[10px] uppercase tracking-[0.5em] text-purple-400/50 mb-4">
+            Tony Corinda
+          </p>
+
           <h1 className="text-4xl md:text-6xl font-serif italic text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-fuchsia-300 to-indigo-400 mb-4">
             Thirteen Steps to Mentalism
           </h1>
+
           <p className="text-white/30 text-sm max-w-2xl mx-auto leading-relaxed">
-            Each of the thirteen chapters has its own dedicated site. Click to visit the live chapter, preview it inline with a resizable embed, or access the emergency mirror if the primary is down.
+            Each of the thirteen chapters has its own dedicated site.
+            Click to visit the live chapter, preview it inline with a
+            resizable embed, or access the emergency mirror if the
+            primary is down.
           </p>
+
           <div className="w-20 h-px mx-auto mt-6 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
         </motion.div>
 
         <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-5 space-y-5">
           {chapters.map((chapter, i) => (
-            <ChapterCard key={chapter.id} chapter={chapter} index={i} />
+            <ChapterCard
+              key={chapter.id}
+              chapter={chapter}
+              index={i}
+            />
           ))}
         </div>
       </section>

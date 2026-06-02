@@ -19,7 +19,7 @@ export function ResizableEmbed({
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [size, setSize] = useState({
-    width: initialWidth ?? 720,
+    width: initialWidth ?? 100,
     height: initialHeight,
   });
 
@@ -32,7 +32,7 @@ export function ResizableEmbed({
   const startHeight = useRef(0);
 
   const onResizeMouseDown = useCallback(
-    (e: React.MouseEvent) => {
+    (e: React.MouseEvent<HTMLDivElement>) => {
       e.preventDefault();
       e.stopPropagation();
 
@@ -42,35 +42,25 @@ export function ResizableEmbed({
       startY.current = e.clientY;
 
       startWidth.current =
-        containerRef.current?.offsetWidth ?? size.width;
+        containerRef.current?.offsetWidth ?? 300;
 
       startHeight.current = size.height;
     },
-    [size]
+    [size.height]
   );
 
   useEffect(() => {
-const onMove = (e: MouseEvent) => {
-  if (!isResizing.current) return;
+    const onMove = (e: MouseEvent) => {
+      if (!isResizing.current) return;
 
-  const dx = e.clientX - startX.current;
-  const dy = e.clientY - startY.current;
+      const dx = e.clientX - startX.current;
+      const dy = e.clientY - startY.current;
 
-  const nextWidth = Math.max(
-    260,
-    startWidth.current + dx
-  );
-
-  const nextHeight = Math.max(
-    180,
-    startHeight.current + dy
-  );
-
-  setSize({
-    width: nextWidth,
-    height: nextHeight,
-  });
-};
+      setSize({
+        width: Math.max(260, startWidth.current + dx),
+        height: Math.max(180, startHeight.current + dy),
+      });
+    };
 
     const onUp = () => {
       isResizing.current = false;
@@ -88,34 +78,41 @@ const onMove = (e: MouseEvent) => {
   return (
     <div
       ref={containerRef}
-      className="relative overflow-hidden rounded-xl"
+      className="relative overflow-visible rounded-xl w-full"
       style={{
-        width: `${size.width}px`,
         height: `${size.height}px`,
-        minWidth: 260,
         minHeight: 180,
       }}
     >
-      <iframe
-        src={src}
-        title={title}
-        className="w-full h-full block"
-        style={{
-          border: "none",
-        }}
-        loading="lazy"
-        sandbox={sandbox}
-      />
-
       <div
-        className="absolute bottom-0 right-0 z-30 w-7 h-7 cursor-se-resize flex items-center justify-center group"
-        onMouseDown={onResizeMouseDown}
+        className="relative rounded-xl overflow-hidden border border-white/10 bg-black"
+        style={{
+          width: `${size.width}%`,
+          minWidth: 260,
+          transition: isResizing.current ? "none" : "width 0.12s ease",
+        }}
       >
-        <div className="absolute inset-0 rounded-tl-xl bg-white/0 group-hover:bg-white/10 transition-colors duration-150" />
-
-        <RiDraggable
-          className="rotate-45 text-[13px] text-white/30 group-hover:text-white/60 transition-colors duration-150"
+        <iframe
+          src={src}
+          title={title}
+          className="block w-full"
+          style={{
+            height: `${size.height}px`,
+            border: "none",
+            background: "#000",
+          }}
+          loading="lazy"
+          sandbox={sandbox}
         />
+
+        <div
+          className="absolute bottom-0 right-0 z-50 w-8 h-8 flex items-end justify-end cursor-se-resize"
+          onMouseDown={onResizeMouseDown}
+        >
+          <div className="mb-1 mr-1 rounded-md bg-black/70 border border-white/10 p-1 backdrop-blur-sm hover:bg-white/10 transition-colors">
+            <RiDraggable className="rotate-45 text-[13px] text-white/70" />
+          </div>
+        </div>
       </div>
     </div>
   );
