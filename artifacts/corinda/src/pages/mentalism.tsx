@@ -24,13 +24,12 @@ function ChapterCard({
 
   return (
     <motion.div
-      style={{ breakInside: "avoid" }}
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.5, delay: index * 0.04 }}
       whileHover={{ scale: 1.01 }}
-      className={`mb-5 group relative rounded-2xl p-[1px] overflow-visible bg-gradient-to-br ${chapter.color}`}
+      className={`group relative rounded-2xl p-[1px] overflow-visible bg-gradient-to-br ${chapter.color} w-full md:w-[calc(50%-10px)] lg:w-[calc(33.333%-14px)] xl:w-[calc(25%-15px)]`}
     >
       <div
         className={`absolute inset-0 bg-gradient-to-br ${chapter.color} opacity-0 group-hover:opacity-25 blur-2xl transition-opacity duration-700 pointer-events-none rounded-2xl`}
@@ -154,7 +153,7 @@ export default function Mentalism() {
           <div className="w-20 h-px mx-auto mt-6 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
         </motion.div>
 
-        <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-5 space-y-5">
+        <div className="flex flex-wrap items-start gap-5">
           {chapters.map((chapter, i) => (
             <ChapterCard
               key={chapter.id}
