@@ -1,7 +1,8 @@
-import { Link } from "wouter";
-import { motion, type Variants } from "framer-motion";
+import { Link, useLocation } from "wouter";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { books } from "@/lib/data";
-import { RiBookOpenLine, RiArrowRightLine, RiArrowRightUpLine } from "react-icons/ri";
+import { RiBookOpenLine, RiArrowRightLine, RiArrowRightUpLine, RiEyeLine, RiEyeOffLine, RiExpandVerticalLine } from "react-icons/ri";
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 30 },
@@ -12,7 +13,72 @@ const fadeUp: Variants = {
   }),
 };
 
+function ResizableIframe({ src, title }: { src: string; title: string }) {
+  const [height, setHeight] = useState(400);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartY = useRef(0);
+  const dragStartHeight = useRef(400);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    setIsDragging(true);
+    dragStartY.current = e.clientY;
+    dragStartHeight.current = height;
+    e.preventDefault();
+  }, [height]);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    const delta = e.clientY - dragStartY.current;
+    const newHeight = Math.max(250, dragStartHeight.current + delta);
+    setHeight(newHeight);
+  }, []);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+      return () => {
+        window.removeEventListener("mousemove", handleMouseMove);
+        window.removeEventListener("mouseup", handleMouseUp);
+      };
+    }
+  }, [isDragging, handleMouseMove, handleMouseUp]);
+
+  return (
+    <div className="w-full">
+      <iframe
+        src={src}
+        title={title}
+        className="w-full rounded-lg"
+        style={{ height, border: "none", display: "block" }}
+        loading="lazy"
+      />
+      <div
+        className={`w-full flex items-center justify-center gap-1 py-1 cursor-ns-resize select-none transition-colors rounded-b-lg ${
+          isDragging ? "bg-white/15" : "bg-white/5 hover:bg-white/10"
+        }`}
+        onMouseDown={handleMouseDown}
+      >
+        <RiExpandVerticalLine className="text-[10px] text-white/30" />
+        <span className="text-[10px] text-white/25 uppercase tracking-wider">Drag to resize</span>
+      </div>
+    </div>
+  );
+}
+
 function BookCard({ book, index }: { book: typeof books[0]; index: number }) {
+  const [, navigate] = useLocation();
+  const [showPreview, setShowPreview] = useState(false);
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest("button, a, iframe, .no-navigate")) return;
+    navigate(`/books#book-${book.id}`);
+  };
+
   return (
     <motion.div
       custom={index}
@@ -21,6 +87,7 @@ function BookCard({ book, index }: { book: typeof books[0]; index: number }) {
       whileInView="show"
       viewport={{ once: true, margin: "-60px" }}
       whileHover={{ scale: 1.02, y: -3 }}
+      onClick={handleCardClick}
       className="relative group rounded-2xl p-[1px] overflow-hidden cursor-pointer"
       style={{ background: `linear-gradient(135deg, ${book.glow}, transparent 70%)` }}
     >
@@ -42,8 +109,19 @@ function BookCard({ book, index }: { book: typeof books[0]; index: number }) {
         <p className="text-xs text-white/35 uppercase tracking-widest mb-3">{book.author}</p>
         <p className="text-sm text-white/50 leading-relaxed flex-1">{book.description}</p>
 
-        <div className="mt-5 flex items-center gap-3">
-          <a href={`/books#book-${book.id}`}>
+        <div className="mt-5 flex items-center gap-3 no-navigate">
+          <button
+            onClick={() => setShowPreview(v => !v)}
+            className={`flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider transition-colors ${
+              showPreview
+                ? "text-white/70"
+                : `text-transparent bg-clip-text bg-gradient-to-r ${book.color} hover:opacity-80`
+            }`}
+          >
+            {showPreview ? <RiEyeOffLine className="text-white/40 shrink-0" /> : <RiEyeLine className="text-white/40 shrink-0" />}
+            {showPreview ? "Hide Preview" : "Preview"}
+          </button>
+          <a href={`/books#book-${book.id}`} className="no-navigate">
             <span className={`flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r ${book.color} hover:opacity-80 transition-opacity`}>
               <RiBookOpenLine className="text-white/40 shrink-0" />
               Read PDF
@@ -51,6 +129,24 @@ function BookCard({ book, index }: { book: typeof books[0]; index: number }) {
           </a>
           <RiArrowRightLine className="text-white/15 ml-auto group-hover:translate-x-1 transition-transform duration-300" />
         </div>
+
+        <AnimatePresence>
+          {showPreview && (
+            <motion.div
+              initial={{ height: 0, opacity: 0, marginTop: 0 }}
+              animate={{ height: "auto", opacity: 1, marginTop: 16 }}
+              exit={{ height: 0, opacity: 0, marginTop: 0 }}
+              transition={{ duration: 0.35, ease: "easeInOut" }}
+              className="overflow-hidden"
+            >
+              <div className="p-[1px] rounded-xl bg-white/10">
+                <div className="rounded-xl overflow-hidden bg-black/40">
+                  <ResizableIframe src={book.pdf} title={book.title} />
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.div>
   );

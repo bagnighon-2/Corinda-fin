@@ -1,7 +1,23 @@
 import { motion } from "framer-motion";
+import { useEffect } from "react";
 import { books } from "@/lib/data";
 
 export default function Books() {
+  useEffect(() => {
+    const scrollToHash = () => {
+      const hash = window.location.hash;
+      if (hash) {
+        const el = document.getElementById(hash.replace("#", ""));
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }
+    };
+    scrollToHash();
+    const handleHashChange = () => scrollToHash();
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
   return (
     <div className="flex-1 w-full max-w-7xl mx-auto px-4 py-20">
 
