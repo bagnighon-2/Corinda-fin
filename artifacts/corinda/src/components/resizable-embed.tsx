@@ -50,30 +50,27 @@ export function ResizableEmbed({
   );
 
   useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      if (!isResizing.current) return;
+const onMove = (e: MouseEvent) => {
+  if (!isResizing.current) return;
 
-      const dx = e.clientX - startX.current;
-      const dy = e.clientY - startY.current;
+  const dx = e.clientX - startX.current;
+  const dy = e.clientY - startY.current;
 
-      const parentWidth =
-        containerRef.current?.parentElement?.offsetWidth ?? window.innerWidth;
+  const nextWidth = Math.max(
+    260,
+    startWidth.current + dx
+  );
 
-      const nextWidth = Math.min(
-        parentWidth,
-        Math.max(260, startWidth.current + dx)
-      );
+  const nextHeight = Math.max(
+    180,
+    startHeight.current + dy
+  );
 
-      const nextHeight = Math.max(
-        180,
-        startHeight.current + dy
-      );
-
-      setSize({
-        width: nextWidth,
-        height: nextHeight,
-      });
-    };
+  setSize({
+    width: nextWidth,
+    height: nextHeight,
+  });
+};
 
     const onUp = () => {
       isResizing.current = false;
