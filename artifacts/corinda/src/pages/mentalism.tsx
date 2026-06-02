@@ -31,7 +31,7 @@ function ChapterCard({ chapter, index }: { chapter: typeof chapters[0]; index: n
         </div>
 
         <div className="px-5 pb-4 flex flex-wrap gap-2">
-          <a href={`https://corinda${chapter.id}.netlify.app`} target="_blank" rel="noopener noreferrer"
+          <a href={`https://cori${chapter.id}.netlify.app`} target="_blank" rel="noopener noreferrer"
             className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium uppercase tracking-wider bg-gradient-to-br ${chapter.color} text-white opacity-85 hover:opacity-100 transition-opacity`}
             onClick={e => e.stopPropagation()}>
             <RiExternalLinkLine className="shrink-0" /> View Site
@@ -61,7 +61,7 @@ function ChapterCard({ chapter, index }: { chapter: typeof chapters[0]; index: n
             >
               <div className="p-[1px] rounded-b-[15px] overflow-hidden">
                 <ResizableEmbed
-                  src={`https://corinda${chapter.id}.netlify.app`}
+                  src={`https://cori${chapter.id}.netlify.app`}
                   title={`Chapter ${chapter.id}: ${chapter.title}`}
                   initialHeight={300}
                   sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
