@@ -9,12 +9,13 @@ function ChapterCard({ chapter, index }: { chapter: typeof chapters[0]; index: n
   const [showEmbed, setShowEmbed] = useState(false);
   return (
     <motion.div
+  style={{ breakInside: "avoid" }}
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.5, delay: index * 0.04 }}
       whileHover={{ scale: 1.01 }}
-      className={`group relative rounded-2xl p-[1px] overflow-visible bg-gradient-to-br ${chapter.color}`}
+      className={`mb-5 group relative rounded-2xl p-[1px] overflow-visible bg-gradient-to-br ${chapter.color}`}
     >
       <div className={`absolute inset-0 bg-gradient-to-br ${chapter.color} opacity-0 group-hover:opacity-25 blur-2xl transition-opacity duration-700 pointer-events-none rounded-2xl`} />
       <div className="relative bg-[#08080D] rounded-[15px] flex flex-col border border-white/5 group-hover:border-white/10 transition-colors duration-300 overflow-visible">
@@ -53,6 +54,7 @@ function ChapterCard({ chapter, index }: { chapter: typeof chapters[0]; index: n
         <AnimatePresence>
           {showEmbed && (
             <motion.div
+  style={{ breakInside: "avoid" }}
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
@@ -88,6 +90,7 @@ export default function Mentalism() {
 
       <section className="max-w-7xl mx-auto px-4 pb-24">
         <motion.div
+  style={{ breakInside: "avoid" }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
@@ -103,7 +106,7 @@ export default function Mentalism() {
           <div className="w-20 h-px mx-auto mt-6 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-5 space-y-5">
           {chapters.map((chapter, i) => (
             <ChapterCard key={chapter.id} chapter={chapter} index={i} />
           ))}
