@@ -65,20 +65,21 @@ export function ResizableEmbed({
       const dx = e.clientX - startMouse.current.x;
       const dy = e.clientY - startMouse.current.y;
 
-const maxWidth = window.innerWidth - 80;
-const maxHeight = window.innerHeight - 120;
+      const maxWidth = window.innerWidth - 120;
+      const maxHeight = window.innerHeight - 160;
 
-setSize({
-  width: Math.min(
-    maxWidth,
-    Math.max(260, startSize.current.width + dx)
-  ),
+      setSize({
+        width: Math.min(
+          maxWidth,
+          Math.max(260, startSize.current.width + dx)
+        ),
 
-  height: Math.min(
-    maxHeight,
-    Math.max(180, startSize.current.height + dy)
-  ),
-});
+        height: Math.min(
+          maxHeight,
+          Math.max(180, startSize.current.height + dy)
+        ),
+      });
+    };
 
     const onUp = () => {
       isResizing.current = false;
@@ -106,7 +107,6 @@ setSize({
           height: `${size.height}px`,
           minWidth: "260px",
           minHeight: "180px",
-          maxWidth: "100%",
         }}
       >
         <iframe
