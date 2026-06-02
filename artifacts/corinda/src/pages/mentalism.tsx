@@ -30,7 +30,7 @@ function ChapterCard({ chapter, index }: { chapter: typeof chapters[0]; index: n
         </div>
 
         <div className="px-5 pb-4 flex flex-wrap gap-2">
-          <a href={`https://corinda${chapter.id}.netlify.app`} target="_blank" rel="noopener noreferrer"
+          <a href={`https://cori${chapter.id}.netlify.app`} target="_blank" rel="noopener noreferrer"
             className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium uppercase tracking-wider bg-gradient-to-br ${chapter.color} text-white opacity-85 hover:opacity-100 transition-opacity`}
             onClick={e => e.stopPropagation()}>
             <RiExternalLinkLine className="shrink-0" /> View Site
@@ -38,7 +38,7 @@ function ChapterCard({ chapter, index }: { chapter: typeof chapters[0]; index: n
           <a href={`https://${chapter.id}corinda.netlify.app`} target="_blank" rel="noopener noreferrer"
             className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium uppercase tracking-wider bg-white/5 border border-white/10 text-white/55 hover:text-white hover:bg-white/10 transition-all"
             onClick={e => e.stopPropagation()}>
-            <RiAlertLine className="shrink-0 text-green-400" /> Emergency
+            <RiAlertLine className="shrink-0 text-green-400" /> Ex-Emergency
           </a>
           <button onClick={() => setShowEmbed(v => !v)}
             className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium uppercase tracking-wider bg-white/5 border border-white/10 text-white/40 hover:text-white/70 transition-all ml-auto">
@@ -56,7 +56,7 @@ function ChapterCard({ chapter, index }: { chapter: typeof chapters[0]; index: n
               transition={{ duration: 0.35, ease: "easeInOut" }}
               className="overflow-hidden border-t border-white/8"
             >
-              <iframe src={`https://corinda${chapter.id}.netlify.app`}
+              <iframe src={`https://cori${chapter.id}.netlify.app`}
                 title={`Chapter ${chapter.id}: ${chapter.title}`}
                 className="w-full h-70" style={{ height: 280 }}
                 loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" />
