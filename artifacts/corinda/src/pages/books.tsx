@@ -90,7 +90,7 @@ export default function Books() {
                     </a>
 
                     <a
-                      href={book.pdf.replace("/preview", "/export?format=pdf")}
+                      href={book.pdf.replace("/preview", "/view?usp=sharing")}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/15 text-white/70 text-xs text-center transition-colors"
