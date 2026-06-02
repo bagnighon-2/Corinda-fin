@@ -44,8 +44,7 @@ export function ResizableEmbed({
       startWidth.current =
         containerRef.current?.offsetWidth ?? size.width;
 
-      startHeight.current =
-        containerRef.current?.offsetHeight ?? size.height;
+      startHeight.current = size.height;
     },
     [size]
   );
@@ -98,7 +97,6 @@ export function ResizableEmbed({
         height: `${size.height}px`,
         minWidth: 260,
         minHeight: 180,
-        maxWidth: "100%",
       }}
     >
       <iframe
