@@ -12,24 +12,28 @@ interface ResizableEmbedProps {
 export function ResizableEmbed({
   src,
   title,
-  initialHeight = 360,
-  initialWidth,
+  initialHeight = 300,
+  initialWidth = 420,
   sandbox,
 }: ResizableEmbedProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [size, setSize] = useState({
-    width: initialWidth ?? 100,
+    width: initialWidth,
     height: initialHeight,
   });
 
   const isResizing = useRef(false);
 
-  const startX = useRef(0);
-  const startY = useRef(0);
+  const startMouse = useRef({
+    x: 0,
+    y: 0,
+  });
 
-  const startWidth = useRef(0);
-  const startHeight = useRef(0);
+  const startSize = useRef({
+    width: initialWidth,
+    height: initialHeight,
+  });
 
   const onResizeMouseDown = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -38,32 +42,49 @@ export function ResizableEmbed({
 
       isResizing.current = true;
 
-      startX.current = e.clientX;
-      startY.current = e.clientY;
+      startMouse.current = {
+        x: e.clientX,
+        y: e.clientY,
+      };
 
-      startWidth.current =
-        containerRef.current?.offsetWidth ?? 300;
+      startSize.current = {
+        width: size.width,
+        height: size.height,
+      };
 
-      startHeight.current = size.height;
+      document.body.style.userSelect = "none";
+      document.body.style.cursor = "se-resize";
     },
-    [size.height]
+    [size]
   );
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
       if (!isResizing.current) return;
 
-      const dx = e.clientX - startX.current;
-      const dy = e.clientY - startY.current;
+      const dx = e.clientX - startMouse.current.x;
+      const dy = e.clientY - startMouse.current.y;
 
-      setSize({
-        width: Math.max(260, startWidth.current + dx),
-        height: Math.max(180, startHeight.current + dy),
-      });
-    };
+const maxWidth = window.innerWidth - 80;
+const maxHeight = window.innerHeight - 120;
+
+setSize({
+  width: Math.min(
+    maxWidth,
+    Math.max(260, startSize.current.width + dx)
+  ),
+
+  height: Math.min(
+    maxHeight,
+    Math.max(180, startSize.current.height + dy)
+  ),
+});
 
     const onUp = () => {
       isResizing.current = false;
+
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
     };
 
     window.addEventListener("mousemove", onMove);
@@ -76,28 +97,23 @@ export function ResizableEmbed({
   }, []);
 
   return (
-    <div
-      ref={containerRef}
-      className="relative overflow-visible rounded-xl w-full"
-      style={{
-        height: `${size.height}px`,
-        minHeight: 180,
-      }}
-    >
+    <div className="overflow-visible py-2">
       <div
-        className="relative rounded-xl overflow-hidden border border-white/10 bg-black"
+        ref={containerRef}
+        className="relative rounded-xl overflow-hidden border border-white/10 bg-black shadow-2xl"
         style={{
-          width: `${size.width}%`,
-          minWidth: 260,
-          transition: isResizing.current ? "none" : "width 0.12s ease",
+          width: `${size.width}px`,
+          height: `${size.height}px`,
+          minWidth: "260px",
+          minHeight: "180px",
+          maxWidth: "100%",
         }}
       >
         <iframe
           src={src}
           title={title}
-          className="block w-full"
+          className="absolute inset-0 w-full h-full"
           style={{
-            height: `${size.height}px`,
             border: "none",
             background: "#000",
           }}
@@ -106,11 +122,11 @@ export function ResizableEmbed({
         />
 
         <div
-          className="absolute bottom-0 right-0 z-50 w-8 h-8 flex items-end justify-end cursor-se-resize"
           onMouseDown={onResizeMouseDown}
+          className="absolute bottom-0 right-0 z-50 w-10 h-10 cursor-se-resize flex items-end justify-end"
         >
-          <div className="mb-1 mr-1 rounded-md bg-black/70 border border-white/10 p-1 backdrop-blur-sm hover:bg-white/10 transition-colors">
-            <RiDraggable className="rotate-45 text-[13px] text-white/70" />
+          <div className="m-1 rounded-md bg-black/75 border border-white/10 p-1 backdrop-blur-sm hover:bg-white/10 transition-colors">
+            <RiDraggable className="rotate-45 text-sm text-white/80" />
           </div>
         </div>
       </div>
