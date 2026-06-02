@@ -1,21 +1,22 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { RiBook2Line, RiHomeLine, RiAlertFill, RiBrainLine } from "react-icons/ri";
+import { RiBook2Line, RiHomeLine, RiAlertFill, RiBrainLine, RiLeafLine, RiFlashlightLine } from "react-icons/ri";
 import { FloatingEmojis } from "@/components/floating-emojis";
+import { useMotionPreference } from "@/lib/motion-context";
 
 export function Layout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
+  const { reducedMotion, toggleMotion } = useMotionPreference();
 
   if (location === "/emergency" || location === "/vision") {
     return <>{children}</>;
   }
 
   const emojiSeed = location === "/books" ? 99 : location === "/mentalism" ? 13 : location === "/vision" ? 7 : 42;
-  const emojiCount = 20;
 
   return (
     <div className="min-h-screen bg-[#05050A] text-white selection:bg-fuchsia-500/30 font-sans relative overflow-hidden flex flex-col">
-      <FloatingEmojis count={emojiCount} seed={emojiSeed} />
+      {!reducedMotion && <FloatingEmojis count={20} seed={emojiSeed} />}
 
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="absolute top-[-20%] left-[-10%] w-[55%] h-[55%] rounded-full bg-purple-900/12 blur-[160px]" />
@@ -30,9 +31,25 @@ export function Layout({ children }: { children: ReactNode }) {
           </Link>
           <div className="flex items-center gap-1 md:gap-2">
             <NavLink href="/" icon={<RiHomeLine />} label="Overview" active={location === "/"} />
-            <NavLink href="/books" icon={<RiBook2Line />} label="Library" active={location === "/books"} />
             <NavLink href="/mentalism" icon={<RiBrainLine className="text-purple-400" />} label="13 Steps" active={location === "/mentalism"} mentalism />
+            <NavLink href="/books" icon={<RiBook2Line />} label="Library" active={location === "/books"} />
             <NavLink href="/emergency" icon={<RiAlertFill className="text-green-400" />} label="Emergency" active={location === "/emergency"} emergency />
+
+            <button
+              onClick={toggleMotion}
+              title={reducedMotion ? "Enable animations" : "Disable animations (low-power mode)"}
+              className={`
+                flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-xs uppercase tracking-widest transition-all duration-200 border
+                ${reducedMotion
+                  ? "text-emerald-300 bg-emerald-950/40 border-emerald-700/40"
+                  : "text-white/30 hover:text-white/60 hover:bg-white/5 border-transparent"
+                }
+              `}
+            >
+              {reducedMotion ? <RiLeafLine className="shrink-0" /> : <RiFlashlightLine className="shrink-0" />}
+              <span className="hidden md:inline">{reducedMotion ? "Static" : "Motion"}</span>
+            </button>
+
             <Link href="/vision" className="opacity-0 hover:opacity-100 transition-opacity duration-500 px-2 py-1 text-xs text-white/10 select-none">·</Link>
           </div>
         </div>

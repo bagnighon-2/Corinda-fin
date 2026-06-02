@@ -348,3 +348,39 @@
   will-change: transform, opacity;
   line-height: 1;
 }
+
+/* ── No-motion / reduced-motion mode ─────────────────────── */
+/* Applied via .no-motion on <html> (manual toggle) or system preference */
+
+html.no-motion *,
+html.no-motion *::before,
+html.no-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-delay: 0ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  transition-delay: 0ms !important;
+}
+
+/* Also honour system preference for devices that never load our JS toggle */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    transition-delay: 0ms !important;
+  }
+}
+
+/* ── Resizable embed handles ─────────────────────────────── */
+.embed-resize-h {
+  cursor: ns-resize;
+  user-select: none;
+}
+.embed-resize-w {
+  cursor: ew-resize;
+  user-select: none;
+}
