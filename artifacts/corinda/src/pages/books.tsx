@@ -13,7 +13,7 @@ function getEmbedUrl(url: string): string {
     return url;
   }
 
-  return `https://drive.google.com/file/d/${match[1]}/view`;
+  return `https://drive.google.com/file/d/${match[1]}/preview`;
 }
 
 function getDownloadUrl(url: string): string {
