@@ -1,55 +1,34 @@
 import { motion } from "framer-motion";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { books } from "@/lib/data";
 
 type ReaderSettings = {
-  fontSize: number;
-  lineHeight: number;
-  readerWidth: number;
   darkMode: boolean;
-  continuousScroll: boolean;
-  accessibilityMode: boolean;
-  paragraphMode: boolean;
+  readerWidth: number;
 };
 
 const DEFAULT_SETTINGS: ReaderSettings = {
-  fontSize: 18,
-  lineHeight: 1.9,
-  readerWidth: 920,
   darkMode: true,
-  continuousScroll: true,
-  accessibilityMode: true,
-  paragraphMode: true,
+  readerWidth: 1200,
 };
 
-function extractDriveFileId(url: string): string {
-  const match = url.match(/\/d\/(.*?)\//);
-  return match?.[1] ?? "";
-}
-
-function buildGooglePdfUrl(url: string): string {
-  const id = extractDriveFileId(url);
-
-  if (!id) {
-    return url;
+function getPreviewUrl(url: string): string {
+  if (!url) {
+    return "";
   }
 
-  return `https://drive.google.com/uc?export=download&id=${id}`;
+  return url.replace("/view", "/preview");
 }
 
 type BookReaderProps = {
   title: string;
   pdf: string;
-  color: string;
 };
 
 function BookReader({
   title,
   pdf,
-  color,
 }: BookReaderProps) {
-  const iframeRef = useRef<HTMLIFrameElement | null>(null);
-
   const [showSettings, setShowSettings] =
     useState<boolean>(false);
 
@@ -73,10 +52,7 @@ function BookReader({
         setSettings(parsed);
       }
     } catch (error) {
-      console.error(
-        "Failed to load reader settings:",
-        error
-      );
+      console.error(error);
     }
   }, []);
 
@@ -91,69 +67,14 @@ function BookReader({
         JSON.stringify(settings)
       );
     } catch (error) {
-      console.error(
-        "Failed to save reader settings:",
-        error
-      );
+      console.error(error);
     }
   }, [settings]);
-
-  const directPdfUrl = useMemo(() => {
-    return buildGooglePdfUrl(pdf);
-  }, [pdf]);
-
-  const containerClassName = settings.darkMode
-    ? "border-white/10 bg-black"
-    : "border-black/10 bg-white";
-
-  const topBarClassName = settings.darkMode
-    ? "bg-black/60 border-white/10"
-    : "bg-white/80 border-black/10";
-
-  const textClassName = settings.darkMode
-    ? "text-white/70"
-    : "text-black/70";
 
   return (
     <div className="space-y-4">
 
       <div className="flex flex-wrap items-center gap-2">
-
-        <button
-          type="button"
-          onClick={() =>
-            setSettings((previous) => ({
-              ...previous,
-              accessibilityMode:
-                !previous.accessibilityMode,
-            }))
-          }
-          className={`px-3 py-2 rounded-lg text-xs transition-all border ${
-            settings.accessibilityMode
-              ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-200"
-              : "bg-white/5 border-white/10 text-white/60"
-          }`}
-        >
-          Accessibility Reading Mode
-        </button>
-
-        <button
-          type="button"
-          onClick={() =>
-            setSettings((previous) => ({
-              ...previous,
-              paragraphMode:
-                !previous.paragraphMode,
-            }))
-          }
-          className={`px-3 py-2 rounded-lg text-xs transition-all border ${
-            settings.paragraphMode
-              ? "bg-cyan-500/20 border-cyan-500/40 text-cyan-200"
-              : "bg-white/5 border-white/10 text-white/60"
-          }`}
-        >
-          Paragraph Reflow
-        </button>
 
         <button
           type="button"
@@ -182,147 +103,33 @@ function BookReader({
           Reader Settings
         </button>
 
-        <a
-          href={directPdfUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`px-3 py-2 rounded-lg text-xs transition-all bg-gradient-to-r ${color} text-white`}
-        >
-          Open Raw PDF ↗
-        </a>
-
       </div>
 
       {showSettings && (
         <div className="rounded-2xl border border-white/10 bg-black/40 p-5">
 
-          <div className="grid md:grid-cols-2 gap-6">
+          <div>
 
-            <div>
+            <label className="text-white/70 text-xs uppercase tracking-widest">
+              Reader Width
+            </label>
 
-              <label className="text-white/70 text-xs uppercase tracking-widest">
-                Font Size
-              </label>
-
-              <input
-                type="range"
-                min={14}
-                max={32}
-                value={settings.fontSize}
-                onChange={(event) =>
-                  setSettings((previous) => ({
-                    ...previous,
-                    fontSize: Number(
-                      event.target.value
-                    ),
-                  }))
-                }
-                className="w-full mt-2"
-              />
-
-              <div className="text-white/40 text-xs mt-1">
-                {settings.fontSize}px
-              </div>
-
-            </div>
-
-            <div>
-
-              <label className="text-white/70 text-xs uppercase tracking-widest">
-                Line Height
-              </label>
-
-              <input
-                type="range"
-                min={1.2}
-                max={3}
-                step={0.1}
-                value={settings.lineHeight}
-                onChange={(event) =>
-                  setSettings((previous) => ({
-                    ...previous,
-                    lineHeight: Number(
-                      event.target.value
-                    ),
-                  }))
-                }
-                className="w-full mt-2"
-              />
-
-              <div className="text-white/40 text-xs mt-1">
-                {settings.lineHeight}
-              </div>
-
-            </div>
-
-            <div>
-
-              <label className="text-white/70 text-xs uppercase tracking-widest">
-                Reader Width
-              </label>
-
-              <input
-                type="range"
-                min={620}
-                max={1400}
-                step={20}
-                value={settings.readerWidth}
-                onChange={(event) =>
-                  setSettings((previous) => ({
-                    ...previous,
-                    readerWidth: Number(
-                      event.target.value
-                    ),
-                  }))
-                }
-                className="w-full mt-2"
-              />
-
-              <div className="text-white/40 text-xs mt-1">
-                {settings.readerWidth}px
-              </div>
-
-            </div>
-
-            <div className="flex flex-col gap-3">
-
-              <button
-                type="button"
-                onClick={() =>
-                  setSettings((previous) => ({
-                    ...previous,
-                    continuousScroll:
-                      !previous.continuousScroll,
-                  }))
-                }
-                className={`px-3 py-2 rounded-lg text-xs transition-all border ${
-                  settings.continuousScroll
-                    ? "bg-amber-500/20 border-amber-500/40 text-amber-200"
-                    : "bg-white/5 border-white/10 text-white/60"
-                }`}
-              >
-                Continuous Scroll
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  if (
-                    typeof window !== "undefined"
-                  ) {
-                    window.localStorage.removeItem(
-                      "alexandria-reader-settings"
-                    );
-                  }
-
-                  setSettings(DEFAULT_SETTINGS);
-                }}
-                className="px-3 py-2 rounded-lg text-xs bg-red-500/10 border border-red-500/20 text-red-300"
-              >
-                Reset Reader Settings
-              </button>
-
-            </div>
+            <input
+              type="range"
+              min={700}
+              max={1600}
+              step={20}
+              value={settings.readerWidth}
+              onChange={(event) =>
+                setSettings((previous) => ({
+                  ...previous,
+                  readerWidth: Number(
+                    event.target.value
+                  ),
+                }))
+              }
+              className="w-full mt-2"
+            />
 
           </div>
 
@@ -330,140 +137,36 @@ function BookReader({
       )}
 
       <div
-        className={`relative rounded-2xl overflow-hidden border ${containerClassName}`}
+        className={`rounded-2xl overflow-hidden border ${
+          settings.darkMode
+            ? "border-white/10 bg-black"
+            : "border-black/10 bg-white"
+        }`}
       >
 
         <div
-          className={`absolute top-0 left-0 right-0 z-20 backdrop-blur-xl border-b px-4 py-2 flex items-center justify-between ${topBarClassName}`}
+          className="mx-auto"
+          style={{
+            maxWidth: `${settings.readerWidth}px`,
+          }}
         >
 
-          <div>
-
-            <div
-              className={`text-sm font-medium ${
-                settings.darkMode
-                  ? "text-white"
-                  : "text-black"
-              }`}
-            >
-              Alexandria Compatible Reader
-            </div>
-
-            <div
-              className={`text-[11px] ${
-                settings.darkMode
-                  ? "text-white/40"
-                  : "text-black/40"
-              }`}
-            >
-              Semantic paragraphs • TTS optimized • Extension friendly
-            </div>
-
-          </div>
-
-          <div
-            className={`text-[10px] uppercase tracking-widest ${
-              settings.darkMode
-                ? "text-white/30"
-                : "text-black/40"
-            }`}
-          >
-            {title}
-          </div>
-
-        </div>
-
-        <div className="pt-16">
-
-          <div
-            className={`mx-auto transition-all duration-300 ${
-              settings.darkMode
-                ? "bg-[#09090f]"
-                : "bg-[#fafafa]"
-            }`}
+          <iframe
+            src={getPreviewUrl(pdf)}
+            title={title}
+            loading="lazy"
+            className="w-full"
+            allow="clipboard-read; clipboard-write"
+            referrerPolicy="no-referrer"
             style={{
-              maxWidth: `${settings.readerWidth}px`,
+              height: "85vh",
+              minHeight: "800px",
+              border: "none",
+              background: settings.darkMode
+                ? "#09090f"
+                : "#ffffff",
             }}
-          >
-
-            <div
-              className={`rounded-2xl overflow-hidden ${
-                settings.darkMode
-                  ? "shadow-[0_0_60px_rgba(0,0,0,0.5)]"
-                  : "shadow-[0_0_40px_rgba(0,0,0,0.08)]"
-              }`}
-            >
-
-              <iframe
-                ref={iframeRef}
-                src={`${directPdfUrl}#toolbar=1&navpanes=0&scrollbar=1`}
-                title={title}
-                loading="lazy"
-                allow="clipboard-read; clipboard-write"
-                className="w-full"
-                style={{
-                  height: "88vh",
-                  minHeight: "780px",
-                  border: "none",
-                  background: settings.darkMode
-                    ? "#09090f"
-                    : "#ffffff",
-                }}
-              />
-
-            </div>
-
-            <div
-              className={`px-8 py-6 border-t ${
-                settings.darkMode
-                  ? "border-white/10"
-                  : "border-black/10"
-              }`}
-            >
-
-              <div
-                className={`leading-relaxed select-text ${textClassName}`}
-                style={{
-                  fontSize: `${settings.fontSize}px`,
-                  lineHeight: settings.lineHeight,
-                  whiteSpace: "pre-wrap",
-                  wordBreak: "normal",
-                  overflowWrap: "break-word",
-                  userSelect: "text",
-                  WebkitUserSelect: "text",
-                  pointerEvents: "auto",
-                }}
-              >
-
-                <p className="mb-6">
-                  Alexandria.live compatibility mode is enabled.
-                  This reader is optimized for semantic text
-                  flow, accessibility parsing, sentence
-                  continuity, and paragraph-aware reading
-                  behavior.
-                </p>
-
-                <p className="mb-6">
-                  Unlike Google Drive preview mode, this reader
-                  exposes a cleaner selectable text structure
-                  so browser reading extensions can avoid
-                  treating every visual PDF line as a separate
-                  sentence.
-                </p>
-
-                <p>
-                  For the best results:
-                  enable paragraph mode,
-                  keep continuous scrolling enabled,
-                  and use raw PDF mode rather than Drive
-                  preview rendering.
-                </p>
-
-              </div>
-
-            </div>
-
-          </div>
+          />
 
         </div>
 
@@ -517,8 +220,14 @@ export default function Books() {
     <div className="flex-1 w-full max-w-[1700px] mx-auto px-4 py-20">
 
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{
+          opacity: 0,
+          y: -20,
+        }}
+        animate={{
+          opacity: 1,
+          y: 0,
+        }}
         className="text-center mb-20"
       >
 
@@ -539,7 +248,10 @@ export default function Books() {
             key={book.id}
             id={`book-${book.id}`}
             className="relative scroll-mt-24"
-            initial={{ opacity: 0, y: 30 }}
+            initial={{
+              opacity: 0,
+              y: 30,
+            }}
             whileInView={{
               opacity: 1,
               y: 0,
@@ -598,12 +310,6 @@ export default function Books() {
                         {book.tag}
                       </span>
 
-                      {book.hasChapters ? (
-                        <span className="text-[10px] px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/40 uppercase tracking-[0.2em]">
-                          Chapter Navigation
-                        </span>
-                      ) : null}
-
                     </div>
 
                     <p className="text-white/60 text-sm md:text-[15px] mt-4 max-w-3xl leading-relaxed">
@@ -623,16 +329,7 @@ export default function Books() {
                       rel="noopener noreferrer"
                       className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm text-center transition-all border border-white/10"
                     >
-                      Open in Google Drive ↗
-                    </a>
-
-                    <a
-                      href={buildGooglePdfUrl(book.pdf)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`px-4 py-3 rounded-xl bg-gradient-to-r ${book.color} text-white text-sm text-center`}
-                    >
-                      Open Raw PDF ↗
+                      Open Fullscreen ↗
                     </a>
 
                   </div>
@@ -642,7 +339,6 @@ export default function Books() {
                 <BookReader
                   title={book.title}
                   pdf={book.pdf}
-                  color={book.color}
                 />
 
               </div>
