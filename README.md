@@ -1,1 +1,1 @@
-mentisy.netlify.app 
+notmagic.netlify.app 
