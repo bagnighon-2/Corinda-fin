@@ -12,12 +12,12 @@ const DEFAULT_SETTINGS: ReaderSettings = {
   readerWidth: 1200,
 };
 
-function getPreviewUrl(url: string): string {
+function getViewUrl(url: string): string {
   if (!url) {
     return "";
   }
 
-  return url.replace("/view", "/preview");
+  return url.replace("/preview", "/view");
 }
 
 type BookReaderProps = {
@@ -152,7 +152,7 @@ function BookReader({
         >
 
           <iframe
-            src={getPreviewUrl(pdf)}
+            src={getViewUrl(pdf)}
             title={title}
             loading="lazy"
             className="w-full"
@@ -321,10 +321,7 @@ export default function Books() {
                   <div className="flex flex-col gap-3 min-w-[240px]">
 
                     <a
-                      href={book.pdf.replace(
-                        "/preview",
-                        "/view"
-                      )}
+                      href={getViewUrl(book.pdf)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm text-center transition-all border border-white/10"
