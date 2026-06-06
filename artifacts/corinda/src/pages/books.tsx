@@ -14,12 +14,36 @@ const DEFAULT_SETTINGS: ReaderSettings = {
   showPdf: true,
 };
 
-function getPublicPreviewUrl(url: string): string {
+function extractGoogleDriveId(url: string): string {
   if (!url) {
     return "";
   }
 
-  return url.replace("/view", "/preview");
+  const patterns = [
+    /\/file\/d\/([^/]+)/,
+    /id=([^&]+)/,
+    /\/d\/([^/]+)/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+
+    if (match?.[1]) {
+      return match[1];
+    }
+  }
+
+  return "";
+}
+
+function getPublicPdfUrl(url: string): string {
+  const fileId = extractGoogleDriveId(url);
+
+  if (!fileId) {
+    return url;
+  }
+
+  return `https://drive.google.com/uc?export=view&id=${fileId}`;
 }
 
 type BookReaderProps = {
@@ -122,9 +146,24 @@ Open the fullscreen reader for expanded controls and interaction.
     };
   }, [title, settings.textMode]);
 
-  const previewUrl = useMemo(() => {
-    return getPublicPreviewUrl(pdf);
+  const embedUrl = useMemo(() => {
+    return getPublicPdfUrl(pdf);
   }, [pdf]);
+
+  const openFullscreen = () => {
+    const iframe =
+      document.getElementById(
+        `reader-${title}`
+      ) as HTMLIFrameElement | null;
+
+    if (!iframe) {
+      return;
+    }
+
+    if (iframe.requestFullscreen) {
+      iframe.requestFullscreen();
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -192,13 +231,30 @@ Open the fullscreen reader for expanded controls and interaction.
           Reader Settings
         </button>
 
+        <button
+          type="button"
+          onClick={openFullscreen}
+          className="px-3 py-2 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-200 text-xs transition-colors border border-indigo-500/30"
+        >
+          Fullscreen
+        </button>
+
+        <a
+          href={embedUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs transition-colors border border-white/10"
+        >
+          Open PDF
+        </a>
+
       </div>
 
       {showSettings && (
         <div className="rounded-2xl border border-white/10 bg-black/40 p-5">
 
           <div className="text-white/60 text-sm leading-relaxed">
-            Embedded reader enabled.
+            Embedded raw PDF reader enabled.
           </div>
 
         </div>
@@ -206,7 +262,7 @@ Open the fullscreen reader for expanded controls and interaction.
 
       {settings.showPdf && (
         <div
-          className={`rounded-2xl overflow-hidden border ${
+          className={`rounded-2xl overflow-hidden border relative ${
             settings.darkMode
               ? "border-white/10 bg-black"
               : "border-black/10 bg-white"
@@ -214,12 +270,14 @@ Open the fullscreen reader for expanded controls and interaction.
         >
 
           <iframe
-            src={previewUrl}
+            id={`reader-${title}`}
+            src={embedUrl}
             title={title}
             loading="lazy"
-            className="w-full"
-            allow="clipboard-read; clipboard-write"
-            referrerPolicy="strict-origin-when-cross-origin"
+            allowFullScreen
+            className="w-full relative z-10"
+            allow="clipboard-read; clipboard-write; fullscreen"
+            referrerPolicy="no-referrer"
             style={{
               height: "88vh",
               minHeight: "900px",
@@ -227,6 +285,7 @@ Open the fullscreen reader for expanded controls and interaction.
               background: settings.darkMode
                 ? "#09090f"
                 : "#ffffff",
+              overflow: "hidden",
             }}
           />
 
@@ -248,7 +307,11 @@ Open the fullscreen reader for expanded controls and interaction.
             </div>
           ) : (
             <article
-              className="select-text whitespace-pre-wrap text-[18px] leading-[2.1] text-white/80"
+              className={`select-text whitespace-pre-wrap text-[18px] leading-[2.1] ${
+                settings.darkMode
+                  ? "text-white/80"
+                  : "text-black/80"
+              }`}
               style={{
                 userSelect: "text",
                 WebkitUserSelect: "text",
