@@ -163,16 +163,16 @@ export default function Mentalism() {
         </motion.div>
 
         <div
-  className="
-    grid
-    gap-5
-    items-start
-    grid-cols-1
-    md:grid-cols-2
-    lg:grid-cols-3
-    xl:grid-cols-4
-  "
->
+          className="
+            grid
+            gap-5
+            items-start
+            grid-cols-1
+            md:grid-cols-2
+            lg:grid-cols-3
+            xl:grid-cols-4
+          "
+        >
           {chapters.map((chapter, i) => (
             <ChapterCard
               key={chapter.id}
