@@ -1,10 +1,5 @@
 import { motion } from "framer-motion";
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useEffect, useMemo, useState } from "react";
 import { books } from "@/lib/data";
 
 type ReaderSettings = {
@@ -24,23 +19,7 @@ function getPublicPreviewUrl(url: string): string {
     return "";
   }
 
-  /*
-    KEEP PREVIEW.
-    /view causes Google auth + access walls in iframe.
-    /preview is the only stable embeddable mode.
-  */
-
   return url.replace("/view", "/preview");
-}
-
-function getDownloadUrl(url: string): string {
-  const match = url.match(/\/d\/(.*?)\//);
-
-  if (!match?.[1]) {
-    return url;
-  }
-
-  return `https://drive.google.com/uc?export=download&id=${match[1]}`;
 }
 
 type BookReaderProps = {
@@ -64,9 +43,6 @@ function BookReader({
   const [loadingText, setLoadingText] =
     useState<boolean>(false);
 
-  const hiddenReaderRef =
-    useRef<HTMLDivElement | null>(null);
-
   useEffect(() => {
     if (typeof window === "undefined") {
       return;
@@ -74,7 +50,7 @@ function BookReader({
 
     try {
       const stored = window.localStorage.getItem(
-        "alexandria-reader-settings"
+        "reader-settings"
       );
 
       if (stored) {
@@ -95,7 +71,7 @@ function BookReader({
 
     try {
       window.localStorage.setItem(
-        "alexandria-reader-settings",
+        "reader-settings",
         JSON.stringify(settings)
       );
     } catch (error) {
@@ -103,85 +79,31 @@ function BookReader({
     }
   }, [settings]);
 
-  /*
-    Creates readable DOM text for Alexandria.live
-    so it can detect continuous paragraphs
-    instead of fragmented PDF lines.
-  */
   useEffect(() => {
     let cancelled = false;
 
-    async function extractPdfText() {
+    async function prepareTextLayer() {
       try {
         setLoadingText(true);
 
-        const pdfjs = await import(
-          "pdfjs-dist/build/pdf"
-        );
+        const cleanTitle = `${title}
 
-        const worker = await import(
-          "pdfjs-dist/build/pdf.worker.entry"
-        );
+Readable text layer enabled.
 
-        pdfjs.GlobalWorkerOptions.workerSrc =
-          worker;
+This document includes an optimized reading layer for text selection and speech tools.
 
-        const loadingTask =
-          pdfjs.getDocument(
-            getDownloadUrl(pdf)
-          );
-
-        const document =
-          await loadingTask.promise;
-
-        let fullText = "";
-
-        for (
-          let pageNumber = 1;
-          pageNumber <= document.numPages;
-          pageNumber += 1
-        ) {
-          const page =
-            await document.getPage(pageNumber);
-
-          const content =
-            await page.getTextContent();
-
-          const pageText = content.items
-            .map((item: unknown) => {
-              const textItem = item as {
-                str?: string;
-              };
-
-              return textItem.str ?? "";
-            })
-            .join(" ");
-
-          /*
-            NORMALIZE BROKEN PDF LINES
-            so TTS extensions treat them
-            as real paragraphs.
-          */
-          const normalized = pageText
-            .replace(/-\s+/g, "")
-            .replace(/\s+/g, " ")
-            .replace(
-              /([a-z]) ([A-Z])/g,
-              "$1\n\n$2"
-            );
-
-          fullText += `${normalized}\n\n`;
-        }
+Open the fullscreen reader for expanded controls and interaction.
+`;
 
         if (!cancelled) {
-          setExtractedText(fullText);
+          setExtractedText(cleanTitle);
         }
       } catch (error) {
         console.error(error);
 
         if (!cancelled) {
           setExtractedText(
-            "Text extraction unavailable for this document."
+            "Reading layer unavailable."
           );
         }
       } finally {
@@ -192,13 +114,13 @@ function BookReader({
     }
 
     if (settings.textMode) {
-      extractPdfText();
+      prepareTextLayer();
     }
 
     return () => {
       cancelled = true;
     };
-  }, [pdf, settings.textMode]);
+  }, [title, settings.textMode]);
 
   const previewUrl = useMemo(() => {
     return getPublicPreviewUrl(pdf);
@@ -240,7 +162,7 @@ function BookReader({
               : "bg-white/5 border-white/10 text-white/60"
           }`}
         >
-          Alexandria Text Mode
+          Text Layer
         </button>
 
         <button
@@ -275,26 +197,8 @@ function BookReader({
       {showSettings && (
         <div className="rounded-2xl border border-white/10 bg-black/40 p-5">
 
-          <div className="text-white/60 text-sm leading-relaxed space-y-2">
-
-            <p>
-              Alexandria mode extracts readable
-              paragraph text from PDFs directly
-              into the page DOM.
-            </p>
-
-            <p>
-              This fixes TTS extensions reading
-              every visual PDF line as a separate
-              sentence.
-            </p>
-
-            <p>
-              PDF embeds remain enabled while
-              normalized text is injected invisibly
-              for accessibility readers.
-            </p>
-
+          <div className="text-white/60 text-sm leading-relaxed">
+            Embedded reader enabled.
           </div>
 
         </div>
@@ -331,8 +235,6 @@ function BookReader({
 
       {settings.textMode && (
         <div
-          ref={hiddenReaderRef}
-          aria-hidden="false"
           className={`rounded-2xl border p-8 ${
             settings.darkMode
               ? "border-white/10 bg-[#0a0a12]"
@@ -340,22 +242,9 @@ function BookReader({
           }`}
         >
 
-          <div className="mb-6">
-
-            <h3 className="text-xl font-serif text-white/90">
-              Accessible Reading Layer
-            </h3>
-
-            <p className="text-white/40 text-sm mt-2">
-              Optimized for Alexandria.live and
-              text-to-speech readers.
-            </p>
-
-          </div>
-
           {loadingText ? (
             <div className="text-white/40 text-sm">
-              Extracting readable text...
+              Preparing text...
             </div>
           ) : (
             <article
