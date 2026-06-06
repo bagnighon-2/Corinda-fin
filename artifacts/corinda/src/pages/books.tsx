@@ -1,23 +1,46 @@
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { books } from "@/lib/data";
 
 type ReaderSettings = {
   darkMode: boolean;
-  readerWidth: number;
+  textMode: boolean;
+  showPdf: boolean;
 };
 
 const DEFAULT_SETTINGS: ReaderSettings = {
   darkMode: true,
-  readerWidth: 1200,
+  textMode: true,
+  showPdf: true,
 };
 
-function getViewUrl(url: string): string {
+function getPublicPreviewUrl(url: string): string {
   if (!url) {
     return "";
   }
 
-  return url.replace("/preview", "/view");
+  /*
+    KEEP PREVIEW.
+    /view causes Google auth + access walls in iframe.
+    /preview is the only stable embeddable mode.
+  */
+
+  return url.replace("/view", "/preview");
+}
+
+function getDownloadUrl(url: string): string {
+  const match = url.match(/\/d\/(.*?)\//);
+
+  if (!match?.[1]) {
+    return url;
+  }
+
+  return `https://drive.google.com/uc?export=download&id=${match[1]}`;
 }
 
 type BookReaderProps = {
@@ -29,11 +52,20 @@ function BookReader({
   title,
   pdf,
 }: BookReaderProps) {
+  const [settings, setSettings] =
+    useState<ReaderSettings>(DEFAULT_SETTINGS);
+
   const [showSettings, setShowSettings] =
     useState<boolean>(false);
 
-  const [settings, setSettings] =
-    useState<ReaderSettings>(DEFAULT_SETTINGS);
+  const [extractedText, setExtractedText] =
+    useState<string>("");
+
+  const [loadingText, setLoadingText] =
+    useState<boolean>(false);
+
+  const hiddenReaderRef =
+    useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -71,6 +103,107 @@ function BookReader({
     }
   }, [settings]);
 
+  /*
+    Creates readable DOM text for Alexandria.live
+    so it can detect continuous paragraphs
+    instead of fragmented PDF lines.
+  */
+  useEffect(() => {
+    let cancelled = false;
+
+    async function extractPdfText() {
+      try {
+        setLoadingText(true);
+
+        const pdfjs = await import(
+          "pdfjs-dist/build/pdf"
+        );
+
+        const worker = await import(
+          "pdfjs-dist/build/pdf.worker.entry"
+        );
+
+        pdfjs.GlobalWorkerOptions.workerSrc =
+          worker;
+
+        const loadingTask =
+          pdfjs.getDocument(
+            getDownloadUrl(pdf)
+          );
+
+        const document =
+          await loadingTask.promise;
+
+        let fullText = "";
+
+        for (
+          let pageNumber = 1;
+          pageNumber <= document.numPages;
+          pageNumber += 1
+        ) {
+          const page =
+            await document.getPage(pageNumber);
+
+          const content =
+            await page.getTextContent();
+
+          const pageText = content.items
+            .map((item: unknown) => {
+              const textItem = item as {
+                str?: string;
+              };
+
+              return textItem.str ?? "";
+            })
+            .join(" ");
+
+          /*
+            NORMALIZE BROKEN PDF LINES
+            so TTS extensions treat them
+            as real paragraphs.
+          */
+          const normalized = pageText
+            .replace(/-\s+/g, "")
+            .replace(/\s+/g, " ")
+            .replace(
+              /([a-z]) ([A-Z])/g,
+              "$1\n\n$2"
+            );
+
+          fullText += `${normalized}\n\n`;
+        }
+
+        if (!cancelled) {
+          setExtractedText(fullText);
+        }
+      } catch (error) {
+        console.error(error);
+
+        if (!cancelled) {
+          setExtractedText(
+            "Text extraction unavailable for this document."
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingText(false);
+        }
+      }
+    }
+
+    if (settings.textMode) {
+      extractPdfText();
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pdf, settings.textMode]);
+
+  const previewUrl = useMemo(() => {
+    return getPublicPreviewUrl(pdf);
+  }, [pdf]);
+
   return (
     <div className="space-y-4">
 
@@ -96,6 +229,40 @@ function BookReader({
         <button
           type="button"
           onClick={() =>
+            setSettings((previous) => ({
+              ...previous,
+              textMode: !previous.textMode,
+            }))
+          }
+          className={`px-3 py-2 rounded-lg text-xs transition-all border ${
+            settings.textMode
+              ? "bg-cyan-500/20 border-cyan-500/40 text-cyan-200"
+              : "bg-white/5 border-white/10 text-white/60"
+          }`}
+        >
+          Alexandria Text Mode
+        </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            setSettings((previous) => ({
+              ...previous,
+              showPdf: !previous.showPdf,
+            }))
+          }
+          className={`px-3 py-2 rounded-lg text-xs transition-all border ${
+            settings.showPdf
+              ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-200"
+              : "bg-white/5 border-white/10 text-white/60"
+          }`}
+        >
+          Toggle PDF
+        </button>
+
+        <button
+          type="button"
+          onClick={() =>
             setShowSettings((previous) => !previous)
           }
           className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs transition-colors border border-white/10"
@@ -108,59 +275,50 @@ function BookReader({
       {showSettings && (
         <div className="rounded-2xl border border-white/10 bg-black/40 p-5">
 
-          <div>
+          <div className="text-white/60 text-sm leading-relaxed space-y-2">
 
-            <label className="text-white/70 text-xs uppercase tracking-widest">
-              Reader Width
-            </label>
+            <p>
+              Alexandria mode extracts readable
+              paragraph text from PDFs directly
+              into the page DOM.
+            </p>
 
-            <input
-              type="range"
-              min={700}
-              max={1600}
-              step={20}
-              value={settings.readerWidth}
-              onChange={(event) =>
-                setSettings((previous) => ({
-                  ...previous,
-                  readerWidth: Number(
-                    event.target.value
-                  ),
-                }))
-              }
-              className="w-full mt-2"
-            />
+            <p>
+              This fixes TTS extensions reading
+              every visual PDF line as a separate
+              sentence.
+            </p>
+
+            <p>
+              PDF embeds remain enabled while
+              normalized text is injected invisibly
+              for accessibility readers.
+            </p>
 
           </div>
 
         </div>
       )}
 
-      <div
-        className={`rounded-2xl overflow-hidden border ${
-          settings.darkMode
-            ? "border-white/10 bg-black"
-            : "border-black/10 bg-white"
-        }`}
-      >
-
+      {settings.showPdf && (
         <div
-          className="mx-auto"
-          style={{
-            maxWidth: `${settings.readerWidth}px`,
-          }}
+          className={`rounded-2xl overflow-hidden border ${
+            settings.darkMode
+              ? "border-white/10 bg-black"
+              : "border-black/10 bg-white"
+          }`}
         >
 
           <iframe
-            src={getViewUrl(pdf)}
+            src={previewUrl}
             title={title}
             loading="lazy"
             className="w-full"
             allow="clipboard-read; clipboard-write"
-            referrerPolicy="no-referrer"
+            referrerPolicy="strict-origin-when-cross-origin"
             style={{
-              height: "85vh",
-              minHeight: "800px",
+              height: "88vh",
+              minHeight: "900px",
               border: "none",
               background: settings.darkMode
                 ? "#09090f"
@@ -169,8 +327,50 @@ function BookReader({
           />
 
         </div>
+      )}
 
-      </div>
+      {settings.textMode && (
+        <div
+          ref={hiddenReaderRef}
+          aria-hidden="false"
+          className={`rounded-2xl border p-8 ${
+            settings.darkMode
+              ? "border-white/10 bg-[#0a0a12]"
+              : "border-black/10 bg-white"
+          }`}
+        >
+
+          <div className="mb-6">
+
+            <h3 className="text-xl font-serif text-white/90">
+              Accessible Reading Layer
+            </h3>
+
+            <p className="text-white/40 text-sm mt-2">
+              Optimized for Alexandria.live and
+              text-to-speech readers.
+            </p>
+
+          </div>
+
+          {loadingText ? (
+            <div className="text-white/40 text-sm">
+              Extracting readable text...
+            </div>
+          ) : (
+            <article
+              className="select-text whitespace-pre-wrap text-[18px] leading-[2.1] text-white/80"
+              style={{
+                userSelect: "text",
+                WebkitUserSelect: "text",
+              }}
+            >
+              {extractedText}
+            </article>
+          )}
+
+        </div>
+      )}
 
     </div>
   );
@@ -315,19 +515,6 @@ export default function Books() {
                     <p className="text-white/60 text-sm md:text-[15px] mt-4 max-w-3xl leading-relaxed">
                       {book.description}
                     </p>
-
-                  </div>
-
-                  <div className="flex flex-col gap-3 min-w-[240px]">
-
-                    <a
-                      href={getViewUrl(book.pdf)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm text-center transition-all border border-white/10"
-                    >
-                      Open Fullscreen ↗
-                    </a>
 
                   </div>
 
