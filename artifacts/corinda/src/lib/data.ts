@@ -124,7 +124,7 @@ const driveLinks = [
   "https://drive.google.com/file/d/1662TrO57SuR3H5KA_8kPSbDkJGVMJxNg/preview",
   "https://drive.google.com/file/d/16_V6aUthrv9zuHhFcso5iW1zSm_aEVwd/preview",
   "https://drive.google.com/file/d/19I9M4fjmmXpWZ2NQwQMESmwGb2iA1SvG/preview",
-  "https://firebasestorage.googleapis.com/v0/b/speechifymobile.appspot.com/o/multiplatform%2Fimport%2F308okYwtz1eYMdX6ymL3JhLElgb2%2F70ff8d2e-1119-4105-99be-3c81a3434bb5?alt=media&token=9938d93e-4e9d-45df-a100-12bf94a21a7d",
+  "https://drive.google.com/file/d/1B8wQYDgR7Cr8KNU-HJE14ymY5EHz2Xe1/preview",
   "https://drive.google.com/file/d/1BmVeUuMLCYy0cBtaNSkGZQYDRBt6_fWj/preview",
   "https://drive.google.com/file/d/1GolcvPMOZlV5ThRZ6IepPcrqiMZjTMYN/preview",
   "https://drive.google.com/file/d/1OlUWs0nHtOAfcNMwhcW2c4jgEtlIkXVS/preview",
