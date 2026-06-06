@@ -1,49 +1,37 @@
 import { motion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { books } from "@/lib/data";
 
-type ReaderSettings = {
-  darkMode: boolean;
-  textMode: boolean;
-  showPdf: boolean;
-};
-
-const DEFAULT_SETTINGS: ReaderSettings = {
-  darkMode: true,
-  textMode: true,
-  showPdf: true,
-};
-
-function extractGoogleDriveId(url: string): string {
+function getEmbedUrl(url: string): string {
   if (!url) {
     return "";
   }
 
-  const patterns = [
-    /\/file\/d\/([^/]+)/,
-    /id=([^&]+)/,
-    /\/d\/([^/]+)/,
-  ];
+  const match = url.match(/\/d\/([^/]+)/);
 
-  for (const pattern of patterns) {
-    const match = url.match(pattern);
-
-    if (match?.[1]) {
-      return match[1];
-    }
-  }
-
-  return "";
-}
-
-function getPublicPdfUrl(url: string): string {
-  const fileId = extractGoogleDriveId(url);
-
-  if (!fileId) {
+  if (!match || !match[1]) {
     return url;
   }
 
-  return `https://drive.google.com/uc?export=view&id=${fileId}`;
+  const fileId = match[1];
+
+  return `https://drive.google.com/file/d/${fileId}/preview`;
+}
+
+function getDownloadUrl(url: string): string {
+  if (!url) {
+    return "";
+  }
+
+  const match = url.match(/\/d\/([^/]+)/);
+
+  if (!match || !match[1]) {
+    return url;
+  }
+
+  const fileId = match[1];
+
+  return `https://drive.google.com/uc?export=download&id=${fileId}`;
 }
 
 type BookReaderProps = {
@@ -55,274 +43,48 @@ function BookReader({
   title,
   pdf,
 }: BookReaderProps) {
-  const [settings, setSettings] =
-    useState<ReaderSettings>(DEFAULT_SETTINGS);
-
-  const [showSettings, setShowSettings] =
-    useState<boolean>(false);
-
-  const [extractedText, setExtractedText] =
-    useState<string>("");
-
-  const [loadingText, setLoadingText] =
-    useState<boolean>(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    try {
-      const stored = window.localStorage.getItem(
-        "reader-settings"
-      );
-
-      if (stored) {
-        const parsed =
-          JSON.parse(stored) as ReaderSettings;
-
-        setSettings(parsed);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    try {
-      window.localStorage.setItem(
-        "reader-settings",
-        JSON.stringify(settings)
-      );
-    } catch (error) {
-      console.error(error);
-    }
-  }, [settings]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function prepareTextLayer() {
-      try {
-        setLoadingText(true);
-
-        const cleanTitle = `${title}
-
-Readable text layer enabled.
-
-This document includes an optimized reading layer for text selection and speech tools.
-
-Open the fullscreen reader for expanded controls and interaction.
-`;
-
-        if (!cancelled) {
-          setExtractedText(cleanTitle);
-        }
-      } catch (error) {
-        console.error(error);
-
-        if (!cancelled) {
-          setExtractedText(
-            "Reading layer unavailable."
-          );
-        }
-      } finally {
-        if (!cancelled) {
-          setLoadingText(false);
-        }
-      }
-    }
-
-    if (settings.textMode) {
-      prepareTextLayer();
-    }
-
-    return () => {
-      cancelled = true;
-    };
-  }, [title, settings.textMode]);
-
   const embedUrl = useMemo(() => {
-    return getPublicPdfUrl(pdf);
+    return getEmbedUrl(pdf);
   }, [pdf]);
 
-  const openFullscreen = () => {
-    const iframe =
-      document.getElementById(
-        `reader-${title}`
-      ) as HTMLIFrameElement | null;
-
-    if (!iframe) {
-      return;
-    }
-
-    if (iframe.requestFullscreen) {
-      iframe.requestFullscreen();
-    }
-  };
+  const downloadUrl = useMemo(() => {
+    return getDownloadUrl(pdf);
+  }, [pdf]);
 
   return (
     <div className="space-y-4">
 
       <div className="flex flex-wrap items-center gap-2">
 
-        <button
-          type="button"
-          onClick={() =>
-            setSettings((previous) => ({
-              ...previous,
-              darkMode: !previous.darkMode,
-            }))
-          }
-          className={`px-3 py-2 rounded-lg text-xs transition-all border ${
-            settings.darkMode
-              ? "bg-purple-500/20 border-purple-500/40 text-purple-200"
-              : "bg-white/5 border-white/10 text-white/60"
-          }`}
-        >
-          Dark Mode
-        </button>
-
-        <button
-          type="button"
-          onClick={() =>
-            setSettings((previous) => ({
-              ...previous,
-              textMode: !previous.textMode,
-            }))
-          }
-          className={`px-3 py-2 rounded-lg text-xs transition-all border ${
-            settings.textMode
-              ? "bg-cyan-500/20 border-cyan-500/40 text-cyan-200"
-              : "bg-white/5 border-white/10 text-white/60"
-          }`}
-        >
-          Text Layer
-        </button>
-
-        <button
-          type="button"
-          onClick={() =>
-            setSettings((previous) => ({
-              ...previous,
-              showPdf: !previous.showPdf,
-            }))
-          }
-          className={`px-3 py-2 rounded-lg text-xs transition-all border ${
-            settings.showPdf
-              ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-200"
-              : "bg-white/5 border-white/10 text-white/60"
-          }`}
-        >
-          Toggle PDF
-        </button>
-
-        <button
-          type="button"
-          onClick={() =>
-            setShowSettings((previous) => !previous)
-          }
-          className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs transition-colors border border-white/10"
-        >
-          Reader Settings
-        </button>
-
-        <button
-          type="button"
-          onClick={openFullscreen}
-          className="px-3 py-2 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-200 text-xs transition-colors border border-indigo-500/30"
-        >
-          Fullscreen
-        </button>
-
         <a
-          href={embedUrl}
+          href={downloadUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs transition-colors border border-white/10"
+          className="px-3 py-2 rounded-lg text-xs transition-all border bg-white/10 hover:bg-white/20 border-white/10 text-white"
         >
-          Open PDF
+          Download PDF
         </a>
 
       </div>
 
-      {showSettings && (
-        <div className="rounded-2xl border border-white/10 bg-black/40 p-5">
+      <div className="rounded-2xl overflow-hidden border border-white/10 bg-black">
 
-          <div className="text-white/60 text-sm leading-relaxed">
-            Embedded raw PDF reader enabled.
-          </div>
+        <iframe
+          src={embedUrl}
+          title={title}
+          loading="lazy"
+          className="w-full"
+          allow="autoplay"
+          referrerPolicy="strict-origin-when-cross-origin"
+          style={{
+            height: "88vh",
+            minHeight: "900px",
+            border: "none",
+            background: "#09090f",
+          }}
+        />
 
-        </div>
-      )}
-
-      {settings.showPdf && (
-        <div
-          className={`rounded-2xl overflow-hidden border relative ${
-            settings.darkMode
-              ? "border-white/10 bg-black"
-              : "border-black/10 bg-white"
-          }`}
-        >
-
-          <iframe
-            id={`reader-${title}`}
-            src={embedUrl}
-            title={title}
-            loading="lazy"
-            allowFullScreen
-            className="w-full relative z-10"
-            allow="clipboard-read; clipboard-write; fullscreen"
-            referrerPolicy="no-referrer"
-            style={{
-              height: "88vh",
-              minHeight: "900px",
-              border: "none",
-              background: settings.darkMode
-                ? "#09090f"
-                : "#ffffff",
-              overflow: "hidden",
-            }}
-          />
-
-        </div>
-      )}
-
-      {settings.textMode && (
-        <div
-          className={`rounded-2xl border p-8 ${
-            settings.darkMode
-              ? "border-white/10 bg-[#0a0a12]"
-              : "border-black/10 bg-white"
-          }`}
-        >
-
-          {loadingText ? (
-            <div className="text-white/40 text-sm">
-              Preparing text...
-            </div>
-          ) : (
-            <article
-              className={`select-text whitespace-pre-wrap text-[18px] leading-[2.1] ${
-                settings.darkMode
-                  ? "text-white/80"
-                  : "text-black/80"
-              }`}
-              style={{
-                userSelect: "text",
-                WebkitUserSelect: "text",
-              }}
-            >
-              {extractedText}
-            </article>
-          )}
-
-        </div>
-      )}
+      </div>
 
     </div>
   );
