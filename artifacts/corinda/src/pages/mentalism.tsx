@@ -29,13 +29,22 @@ function ChapterCard({
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.5, delay: index * 0.04 }}
       whileHover={{ scale: 1.01 }}
-      className={`group relative rounded-2xl p-[1px] overflow-visible bg-gradient-to-br ${chapter.color} w-full md:w-[calc(50%-10px)] lg:w-[calc(33.333%-14px)] xl:w-[calc(25%-15px)]`}
+      className={`
+        group
+        relative
+        rounded-2xl
+        p-[1px]
+        overflow-visible
+        bg-gradient-to-br
+        ${chapter.color}
+        ${showEmbed ? "lg:col-span-2 xl:col-span-2" : ""}
+      `}
     >
       <div
         className={`absolute inset-0 bg-gradient-to-br ${chapter.color} opacity-0 group-hover:opacity-25 blur-2xl transition-opacity duration-700 pointer-events-none rounded-2xl`}
       />
 
-      <div className="relative bg-[#08080D] rounded-[15px] flex flex-col border border-white/5 group-hover:border-white/10 transition-colors duration-300 overflow-visible">
+      <div className="relative bg-[#08080D] rounded-[15px] flex flex-col border border-white/5 group-hover:border-white/10 transition-colors duration-300 overflow-visible h-full">
         <div className="absolute inset-2 rounded-xl border border-white/0 group-hover:border-white/[0.07] transition-all duration-500 pointer-events-none" />
 
         <div className="relative p-5 pb-3">
@@ -100,7 +109,7 @@ function ChapterCard({
               }}
               className="overflow-visible border-t border-white/8 rounded-b-[15px]"
             >
-              <div className="p-[1px] rounded-b-[15px] overflow-visible">
+              <div className="p-[1px] rounded-b-[15px] overflow-visible w-fit max-w-full">
                 <ResizableEmbed
                   src={`https://cori${chapter.id}.netlify.app`}
                   title={`Chapter ${chapter.id}: ${chapter.title}`}
@@ -153,7 +162,17 @@ export default function Mentalism() {
           <div className="w-20 h-px mx-auto mt-6 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
         </motion.div>
 
-        <div className="flex flex-wrap items-start gap-5">
+        <div
+  className="
+    grid
+    gap-5
+    items-start
+    grid-cols-1
+    md:grid-cols-2
+    lg:grid-cols-3
+    xl:grid-cols-4
+  "
+>
           {chapters.map((chapter, i) => (
             <ChapterCard
               key={chapter.id}
