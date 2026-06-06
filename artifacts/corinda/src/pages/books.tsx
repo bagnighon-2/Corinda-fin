@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { books } from "@/lib/data";
 
 function getEmbedUrl(url: string): string {
@@ -13,9 +13,7 @@ function getEmbedUrl(url: string): string {
     return url;
   }
 
-  const fileId = match[1];
-
-  return `https://drive.google.com/file/d/${fileId}/preview`;
+  return `https://drive.google.com/file/d/${match[1]}/preview`;
 }
 
 function getDownloadUrl(url: string): string {
@@ -29,9 +27,7 @@ function getDownloadUrl(url: string): string {
     return url;
   }
 
-  const fileId = match[1];
-
-  return `https://drive.google.com/uc?export=download&id=${fileId}`;
+  return `https://drive.google.com/uc?export=download&id=${match[1]}`;
 }
 
 type BookReaderProps = {
@@ -43,24 +39,19 @@ function BookReader({
   title,
   pdf,
 }: BookReaderProps) {
-  const embedUrl = useMemo(() => {
-    return getEmbedUrl(pdf);
-  }, [pdf]);
-
-  const downloadUrl = useMemo(() => {
-    return getDownloadUrl(pdf);
-  }, [pdf]);
+  const embedUrl = getEmbedUrl(pdf);
+  const downloadUrl = getDownloadUrl(pdf);
 
   return (
     <div className="space-y-4">
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex items-center gap-2">
 
         <a
           href={downloadUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="px-3 py-2 rounded-lg text-xs transition-all border bg-white/10 hover:bg-white/20 border-white/10 text-white"
+          className="px-3 py-2 rounded-lg text-xs border border-white/10 bg-white/10 hover:bg-white/20 text-white transition-all"
         >
           Download PDF
         </a>
@@ -74,14 +65,13 @@ function BookReader({
           title={title}
           loading="lazy"
           className="w-full"
-          allow="autoplay"
-          referrerPolicy="strict-origin-when-cross-origin"
           style={{
             height: "88vh",
             minHeight: "900px",
             border: "none",
             background: "#09090f",
           }}
+          allow="autoplay"
         />
 
       </div>
@@ -93,10 +83,6 @@ function BookReader({
 export default function Books() {
   useEffect(() => {
     const scrollToHash = () => {
-      if (typeof window === "undefined") {
-        return;
-      }
-
       const hash = window.location.hash;
 
       if (!hash) {
@@ -134,14 +120,8 @@ export default function Books() {
     <div className="flex-1 w-full max-w-[1700px] mx-auto px-4 py-20">
 
       <motion.div
-        initial={{
-          opacity: 0,
-          y: -20,
-        }}
-        animate={{
-          opacity: 1,
-          y: 0,
-        }}
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
         className="text-center mb-20"
       >
 
@@ -162,21 +142,13 @@ export default function Books() {
             key={book.id}
             id={`book-${book.id}`}
             className="relative scroll-mt-24"
-            initial={{
-              opacity: 0,
-              y: 30,
-            }}
-            whileInView={{
-              opacity: 1,
-              y: 0,
-            }}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{
               once: true,
               margin: "-80px",
             }}
-            transition={{
-              duration: 0.5,
-            }}
+            transition={{ duration: 0.5 }}
           >
 
             <div
