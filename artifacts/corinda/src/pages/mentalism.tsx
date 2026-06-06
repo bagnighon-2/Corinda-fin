@@ -29,16 +29,7 @@ function ChapterCard({
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.5, delay: index * 0.04 }}
       whileHover={{ scale: 1.01 }}
-      className={`
-        group
-        relative
-        rounded-2xl
-        p-[1px]
-        overflow-visible
-        bg-gradient-to-br
-        ${chapter.color}
-        ${showEmbed ? "lg:col-span-2 xl:col-span-2" : ""}
-      `}
+      className={`group relative rounded-2xl p-[1px] overflow-visible bg-gradient-to-br ${chapter.color}`}
     >
       <div
         className={`absolute inset-0 bg-gradient-to-br ${chapter.color} opacity-0 group-hover:opacity-25 blur-2xl transition-opacity duration-700 pointer-events-none rounded-2xl`}
@@ -163,16 +154,16 @@ export default function Mentalism() {
         </motion.div>
 
         <div
-          className="
-            grid
-            gap-5
-            items-start
-            grid-cols-1
-            md:grid-cols-2
-            lg:grid-cols-3
-            xl:grid-cols-4
-          "
-        >
+  className="
+    grid
+    gap-5
+    items-start
+    grid-cols-1
+    md:grid-cols-2
+    lg:grid-cols-3
+    xl:grid-cols-4
+  "
+>
           {chapters.map((chapter, i) => (
             <ChapterCard
               key={chapter.id}
