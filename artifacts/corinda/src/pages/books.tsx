@@ -86,20 +86,11 @@ export default function Books() {
                       rel="noopener noreferrer"
                       className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs text-center transition-colors"
                     >
-                      Open in New Tab
+                      Open in New Tab | Download ↗
                     </a>
 
-                    <a
-                      href={book.pdf.replace("/preview", "/view?usp=sharing")}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/15 text-white/70 text-xs text-center transition-colors"
-                    >
-                      Download PDF
-                    </a>
-
-                    <div className="px-3 py-2 rounded-lg bg-white/5 text-white/50 text-xs text-center">
-                      Book #{book.id}
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold bg-gradient-to-br ${book.color} shrink-0`}>
+                    {book.id}
                     </div>
                   </div>
                 </div>

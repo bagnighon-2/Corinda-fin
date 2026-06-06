@@ -1,4 +1,11 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  memo,
+} from "react";
+
 import { RiDraggable } from "react-icons/ri";
 
 interface ResizableEmbedProps {
@@ -9,14 +16,28 @@ interface ResizableEmbedProps {
   sandbox?: string;
 }
 
-export function ResizableEmbed({
+export const ResizableEmbed = memo(function ResizableEmbed({
   src,
   title,
-  initialHeight = 300,
-  initialWidth = 420,
-  sandbox,
+  initialHeight = 700,
+  initialWidth = 520,
+
+  sandbox = `
+    allow-same-origin
+    allow-scripts
+    allow-forms
+    allow-popups
+    allow-downloads
+    allow-modals
+    allow-presentation
+    allow-pointer-lock
+  `,
 }: ResizableEmbedProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const animationFrame = useRef<number | null>(null);
 
   const [size, setSize] = useState({
     width: initialWidth,
@@ -53,7 +74,9 @@ export function ResizableEmbed({
       };
 
       document.body.style.userSelect = "none";
-      document.body.style.cursor = "se-resize";
+      document.body.style.cursor = "nwse-resize";
+
+      document.body.classList.add("resizing-pdf");
     },
     [size]
   );
@@ -62,22 +85,33 @@ export function ResizableEmbed({
     const onMove = (e: MouseEvent) => {
       if (!isResizing.current) return;
 
-      const dx = e.clientX - startMouse.current.x;
-      const dy = e.clientY - startMouse.current.y;
+      if (animationFrame.current) {
+        cancelAnimationFrame(animationFrame.current);
+      }
 
-      const maxWidth = window.innerWidth - 120;
-      const maxHeight = window.innerHeight - 160;
+      animationFrame.current = requestAnimationFrame(() => {
+        const dx = e.clientX - startMouse.current.x;
+        const dy = e.clientY - startMouse.current.y;
 
-      setSize({
-        width: Math.min(
+        const padding = 48;
+
+        const maxWidth = window.innerWidth - padding;
+        const maxHeight = window.innerHeight - padding;
+
+        const nextWidth = Math.min(
           maxWidth,
-          Math.max(260, startSize.current.width + dx)
-        ),
+          Math.max(320, startSize.current.width + dx)
+        );
 
-        height: Math.min(
+        const nextHeight = Math.min(
           maxHeight,
-          Math.max(180, startSize.current.height + dy)
-        ),
+          Math.max(220, startSize.current.height + dy)
+        );
+
+        setSize({
+          width: nextWidth,
+          height: nextHeight,
+        });
       });
     };
 
@@ -86,50 +120,196 @@ export function ResizableEmbed({
 
       document.body.style.userSelect = "";
       document.body.style.cursor = "";
+
+      document.body.classList.remove("resizing-pdf");
+
+      if (animationFrame.current) {
+        cancelAnimationFrame(animationFrame.current);
+      }
     };
 
-    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mousemove", onMove, {
+      passive: true,
+    });
+
     window.addEventListener("mouseup", onUp);
 
     return () => {
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
+
+      if (animationFrame.current) {
+        cancelAnimationFrame(animationFrame.current);
+      }
     };
   }, []);
 
   return (
-    <div className="overflow-visible py-2">
+    <section
+      className="overflow-visible py-3"
+      aria-label={`${title} reader`}
+    >
       <div
         ref={containerRef}
-        className="relative rounded-xl overflow-hidden border border-white/10 bg-black shadow-2xl"
+        className="
+          relative
+          rounded-2xl
+          overflow-hidden
+          border
+          border-white/10
+          bg-black
+          shadow-[0_0_40px_rgba(0,0,0,0.55)]
+          transition-shadow
+          duration-200
+          focus-within:ring-2
+          focus-within:ring-cyan-400/50
+        "
         style={{
           width: `${size.width}px`,
           height: `${size.height}px`,
-          minWidth: "260px",
-          minHeight: "180px",
+          minWidth: "320px",
+          minHeight: "220px",
+          maxWidth: "100vw",
+          maxHeight: "100vh",
         }}
       >
+        {/* Top Reader Bar */}
+
+        <div
+          className="
+            absolute
+            top-0
+            left-0
+            right-0
+            z-40
+            h-10
+            flex
+            items-center
+            justify-between
+            px-3
+            border-b
+            border-white/10
+            bg-black/80
+            backdrop-blur-md
+          "
+        >
+          <div
+            className="
+              truncate
+              text-xs
+              font-medium
+              tracking-wide
+              text-white/80
+            "
+          >
+            {title}
+          </div>
+
+          <div
+            className="
+              text-[10px]
+              uppercase
+              tracking-[0.2em]
+              text-cyan-300/70
+            "
+          >
+            Reader Mode
+          </div>
+        </div>
+
+        {/* Reader */}
+
         <iframe
+          ref={iframeRef}
           src={src}
           title={title}
-          className="absolute inset-0 w-full h-full"
-          style={{
-            border: "none",
-            background: "#000",
-          }}
           loading="lazy"
           sandbox={sandbox}
+          allow="
+            fullscreen;
+            clipboard-read;
+            clipboard-write;
+            autoplay
+          "
+          allowFullScreen
+          referrerPolicy="strict-origin-when-cross-origin"
+          className="
+            absolute
+            inset-0
+            w-full
+            h-full
+            bg-black
+            select-text
+          "
+          style={{
+            border: "none",
+            paddingTop: "40px",
+
+            userSelect: "text",
+            WebkitUserSelect: "text",
+
+            colorScheme: "dark",
+
+            pointerEvents: "auto",
+          }}
         />
+
+        {/* Accessibility overlay hook */}
+
+        <div
+          aria-hidden="true"
+          className="
+            pointer-events-none
+            absolute
+            inset-0
+            z-10
+          "
+        />
+
+        {/* Resize Handle */}
 
         <div
           onMouseDown={onResizeMouseDown}
-          className="absolute bottom-0 right-0 z-50 w-10 h-10 cursor-se-resize flex items-end justify-end"
+          className="
+            absolute
+            bottom-0
+            right-0
+            z-50
+            w-14
+            h-14
+            cursor-nwse-resize
+            flex
+            items-end
+            justify-end
+            group
+          "
         >
-          <div className="m-1 rounded-md bg-black/75 border border-white/10 p-1 backdrop-blur-sm hover:bg-white/10 transition-colors">
-            <RiDraggable className="rotate-45 text-sm text-white/80" />
+          <div
+            className="
+              m-2
+              rounded-lg
+              border
+              border-white/10
+              bg-black/80
+              p-2
+              backdrop-blur-md
+              transition-all
+              duration-150
+              group-hover:bg-cyan-500/20
+              group-hover:border-cyan-400/30
+            "
+          >
+            <RiDraggable
+              className="
+                rotate-45
+                text-base
+                text-white/70
+                group-hover:text-cyan-200
+              "
+            />
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
-}
+});
